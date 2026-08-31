@@ -170,7 +170,7 @@
     </div>
 
     <div class="field">
-      <label for="photos">Фото или скриншот <span class="opt">(до 3 шт. — с телефона камера или галерея, с компьютера файл)</span></label>
+      <label for="photos">Фото или скриншот <span class="opt">(до 3 шт., уйдут вместе с заявкой — камера, галерея или файл)</span></label>
       <input type="file" id="photos" accept="image/*" multiple hidden>
       <button type="button" class="btn-attach" id="attachBtn">Прикрепить фото / скриншот</button>
       <div class="thumbs" id="thumbs"></div>
@@ -200,13 +200,19 @@
     </fieldset>
 
     <div class="actions">
-      <button type="button" class="btn-main" id="sendShare" hidden>Отправить с фото</button>
-      <button type="button" class="btn-main" id="send">Отправить на почту</button>
-      <button type="button" class="btn-sec" id="copy">Скопировать текст</button>
+      <button type="button" class="btn-main" id="submitNet">Отправить заявку</button>
     </div>
-    <p class="note">Если почта на телефоне не настроена — нажмите «Скопировать текст» и вставьте заявку
-    в рабочий чат или письмо. Фото экрана приложите к письму/сообщению отдельно.</p>
+    <p class="note">Заявка вместе с фото уходит в оперативный штаб сразу — больше ничего делать не нужно.</p>
     <div class="flash" id="flash" role="status"></div>
+    <div id="fallback" hidden>
+      <p class="hint" style="margin:16px 0 8px; font-weight:600; color:var(--navy)">Резервные способы отправки:</p>
+      <div class="actions" style="margin-top:0">
+        <button type="button" class="btn-main" id="sendShare" hidden>Отправить с фото</button>
+        <button type="button" class="btn-sec" id="send">Отправить на почту</button>
+        <button type="button" class="btn-sec" id="copy">Скопировать текст</button>
+      </div>
+      <p class="note">Если почта на устройстве не настроена — «Скопировать текст» и вставьте заявку в рабочий чат; фото приложите к сообщению отдельно.</p>
+    </div>
 
     <div class="preview" id="preview">
       <button type="button" class="btn-ghost" id="hidePrev">Скрыть текст заявки</button>
@@ -233,6 +239,7 @@
 <script>
 (function(){
   var TO = "u.lebedev.dsk@gmail.com"; // адрес приёма заявок
+  var FS = "https://formsubmit.co/ajax/" + TO; // прямая отправка (FormSubmit)
   var $ = function(id){ return document.getElementById(id); };
 
   // подсветка выбранной радио-карточки
@@ -278,10 +285,10 @@
     }
     return true;
   }
-  function compose(){
+  function compose(num){
     var d = new Date();
     var lines = [
-      "ЗАЯВКА 1С:ERP  " + ticketNum(d),
+      "ЗАЯВКА 1С:ERP  " + (num || ticketNum(d)),
       "Дата: " + pad(d.getDate())+"."+pad(d.getMonth()+1)+"."+d.getFullYear()+" "+pad(d.getHours())+":"+pad(d.getMinutes()),
       "ФИО: " + val('fio'),
       "Цех/подразделение: " + val('dept'),
@@ -312,8 +319,7 @@
   function updatePhotoUI(){
     var can = canSharePhotos();
     $('sendShare').hidden = !can;
-    $('shareHint').hidden = !(photos.length>0 && !can);
-    $('send').className = can ? 'btn-sec' : 'btn-main';
+    $('shareHint').hidden = !(!$('fallback').hidden && photos.length>0 && !can);
   }
   function renderThumbs(){
     var t = $('thumbs'); t.innerHTML='';
@@ -365,6 +371,57 @@
   }
   $('attachBtn').addEventListener('click', function(){ $('photos').click(); });
   $('photos').addEventListener('change', function(e){ addFiles(e.target.files); e.target.value=''; });
+
+  // --- Прямая отправка (FormSubmit) ---
+  function dstr(d){
+    return pad(d.getDate())+"."+pad(d.getMonth()+1)+"."+d.getFullYear()+" "+pad(d.getHours())+":"+pad(d.getMinutes());
+  }
+  function onSent(num){
+    var btn=$('submitNet'); btn.disabled=false; btn.textContent='Отправить заявку';
+    flash('Заявка '+num+' отправлена в штаб. Спасибо! Можно закрыть страницу или описать следующую проблему.', true);
+    $('text').value=''; $('place').value='';
+    photos=[]; renderThumbs(); updatePhotoUI();
+    var r=document.querySelector('input[name=impact]:checked');
+    if(r){ r.checked=false; r.closest('.radio').classList.remove('checked'); }
+    $('preview').style.display='none';
+  }
+  $('submitNet').addEventListener('click', function(){
+    if(!validate()) return;
+    var d=new Date(), num=ticketNum(d);
+    var btn=$('submitNet'); btn.disabled=true; btn.textContent='Отправляю…';
+    var fd=new FormData();
+    fd.append('_subject','Заявка ERP: '+val('area')+' — '+val('fio')+' ('+num+')');
+    fd.append('_template','table');
+    fd.append('_captcha','false');
+    fd.append('Номер заявки', num);
+    fd.append('Дата', dstr(d));
+    fd.append('ФИО', val('fio'));
+    fd.append('Цех / подразделение', val('dept'));
+    fd.append('Телефон', val('phone') || '—');
+    fd.append('Область', val('area'));
+    fd.append('Влияние', radio('impact'));
+    fd.append('Мешает закрытию месяца', radio('close') || 'Не знаю');
+    fd.append('Где в программе', val('place') || '—');
+    fd.append('Описание', val('text'));
+    fd.append('Фото', photos.length ? photos.length+' шт. (во вложении)' : 'нет');
+    photos.forEach(function(f,i){ fd.append('attachment'+(i+1), f, f.name || ('foto'+(i+1)+'.jpg')); });
+    var ctrl = (typeof AbortController!=='undefined') ? new AbortController() : null;
+    var tm = ctrl ? setTimeout(function(){ ctrl.abort(); }, 25000) : null;
+    fetch(FS, {method:'POST', body:fd, headers:{'Accept':'application/json'}, signal: ctrl?ctrl.signal:undefined})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(tm) clearTimeout(tm);
+        if(j && (j.success===true || j.success==='true')){ onSent(num); }
+        else { throw new Error(j && j.message ? j.message : 'send failed'); }
+      })
+      .catch(function(){
+        if(tm) clearTimeout(tm);
+        btn.disabled=false; btn.textContent='Отправить заявку';
+        $('fallback').hidden=false; updatePhotoUI();
+        flash('Автоматическая отправка не сработала (нет связи или сервис недоступен). Ниже — резервные способы: текст заявки уже готов.', false);
+        showPreview(compose(num));
+      });
+  });
 
   $('sendShare').addEventListener('click', function(){
     if(!validate()) return;
