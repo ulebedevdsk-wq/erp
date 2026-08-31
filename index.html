@@ -70,6 +70,15 @@
   .btn-main:active{background:#00245C}
   .btn-sec{background:#FFFFFF; color:var(--navy); flex:1 1 180px}
   .btn-ghost{background:none; border:none; color:var(--blue); font-weight:600; padding:8px 4px; min-height:0; text-decoration:underline}
+  .btn-attach{
+    background:#F0F6FB; color:var(--navy); border:1.5px dashed var(--blue);
+    font-weight:600; width:100%; text-align:center;
+  }
+  .thumbs{display:flex; gap:10px; flex-wrap:wrap; margin-top:6px}
+  .thumb{position:relative; width:72px; height:72px; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:#FFFFFF}
+  .thumb img{width:100%; height:100%; object-fit:cover; display:block}
+  .thumb button{position:absolute; top:2px; right:2px; width:22px; height:22px; min-height:0; padding:0;
+    border-radius:50%; border:none; background:rgba(0,45,114,.85); color:#FFFFFF; font-size:13px; line-height:1; cursor:pointer}
   .note{margin-top:12px; font-size:13px; color:var(--steel)}
   .flash{display:none; margin-top:14px; padding:11px 14px; border-radius:8px; font-size:14px; font-weight:500}
   .flash.ok{display:block; background:#E5F0E6; color:var(--ok); border:1px solid #BCD8BE}
@@ -160,6 +169,14 @@
       <input type="text" id="place" placeholder="Например: Маршрутный лист № МЛ-000123, киоск на участке">
     </div>
 
+    <div class="field">
+      <label for="photos">Фото или скриншот <span class="opt">(до 3 шт. — с телефона камера или галерея, с компьютера файл)</span></label>
+      <input type="file" id="photos" accept="image/*" multiple hidden>
+      <button type="button" class="btn-attach" id="attachBtn">Прикрепить фото / скриншот</button>
+      <div class="thumbs" id="thumbs"></div>
+      <p class="hint" id="shareHint" hidden>На этом устройстве фото не прикрепятся к заявке автоматически — отправьте текст кнопками ниже, а фото приложите к письму или сообщению вручную.</p>
+    </div>
+
     <fieldset>
       <legend>Насколько мешает работе <span class="req">*</span></legend>
       <div class="radios" id="impact">
@@ -183,6 +200,7 @@
     </fieldset>
 
     <div class="actions">
+      <button type="button" class="btn-main" id="sendShare" hidden>Отправить с фото</button>
       <button type="button" class="btn-main" id="send">Отправить на почту</button>
       <button type="button" class="btn-sec" id="copy">Скопировать текст</button>
     </div>
@@ -272,6 +290,7 @@
       "Влияние: " + radio('impact'),
       "Мешает закрытию месяца: " + (radio('close') || "Не знаю"),
       "Где в программе: " + (val('place') || "—"),
+      "Фото: " + (photos.length ? photos.length + " шт. (приложены к сообщению)" : "нет"),
       "Описание: " + val('text'),
       "---",
       "Отправлено со страницы заявок оперативного штаба"
@@ -284,13 +303,90 @@
   }
   $('hidePrev').addEventListener('click', function(){ $('preview').style.display='none'; });
 
+  // --- Фото / скриншоты ---
+  var photos = []; var MAXP = 3;
+  function canSharePhotos(){
+    try{ return photos.length>0 && !!navigator.canShare && navigator.canShare({files:photos}); }
+    catch(e){ return false; }
+  }
+  function updatePhotoUI(){
+    var can = canSharePhotos();
+    $('sendShare').hidden = !can;
+    $('shareHint').hidden = !(photos.length>0 && !can);
+    $('send').className = can ? 'btn-sec' : 'btn-main';
+  }
+  function renderThumbs(){
+    var t = $('thumbs'); t.innerHTML='';
+    photos.forEach(function(f,i){
+      var d=document.createElement('div'); d.className='thumb';
+      var im=document.createElement('img'); im.alt='фото '+(i+1); im.src=URL.createObjectURL(f);
+      var x=document.createElement('button'); x.type='button'; x.textContent='×';
+      x.setAttribute('aria-label','Удалить фото '+(i+1));
+      x.onclick=function(){ photos.splice(i,1); renderThumbs(); updatePhotoUI(); };
+      d.appendChild(im); d.appendChild(x); t.appendChild(d);
+    });
+  }
+  function compressImage(file){
+    return new Promise(function(res){
+      try{
+        var url = URL.createObjectURL(file);
+        var img = new Image();
+        img.onload = function(){
+          try{
+            var maxd=1280, w=img.width, h=img.height, k=Math.min(1, maxd/Math.max(w,h));
+            var c=document.createElement('canvas');
+            c.width=Math.max(1,Math.round(w*k)); c.height=Math.max(1,Math.round(h*k));
+            c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+            URL.revokeObjectURL(url);
+            c.toBlob(function(b){
+              if(b && b.size < file.size){
+                var nm=(file.name||'фото').replace(/\.[^.]+$/,'')+'.jpg';
+                res(new File([b], nm, {type:'image/jpeg'}));
+              } else res(file);
+            }, 'image/jpeg', 0.78);
+          }catch(e){ res(file); }
+        };
+        img.onerror=function(){ URL.revokeObjectURL(url); res(file); };
+        img.src=url;
+      }catch(e){ res(file); }
+    });
+  }
+  function addFiles(list){
+    var arr = Array.prototype.slice.call(list).filter(function(f){
+      return f && f.type && f.type.indexOf('image/')===0;
+    });
+    if(!arr.length) return;
+    var room = MAXP - photos.length;
+    if(room<=0){ flash('Можно приложить не больше '+MAXP+' фото — удалите лишнее (крестик на миниатюре).', false); return; }
+    Promise.all(arr.slice(0,room).map(compressImage)).then(function(fs){
+      photos = photos.concat(fs); renderThumbs(); updatePhotoUI();
+      if(arr.length>room){ flash('Приложены первые '+room+' фото — максимум '+MAXP+'.', false); }
+    });
+  }
+  $('attachBtn').addEventListener('click', function(){ $('photos').click(); });
+  $('photos').addEventListener('change', function(e){ addFiles(e.target.files); e.target.value=''; });
+
+  $('sendShare').addEventListener('click', function(){
+    if(!validate()) return;
+    var text = compose(); showPreview(text);
+    var subj = "Заявка ERP: " + val('area') + " — " + val('fio');
+    navigator.share({title:subj, text:text, files:photos}).then(function(){
+      flash('Выберите в открывшемся меню почту или рабочий чат — текст заявки и фото уйдут вместе.', true);
+    }).catch(function(err){
+      if(err && err.name==='AbortError') return;
+      flash('Не получилось открыть отправку с фото. Отправьте текст кнопками ниже, а фото приложите к письму или сообщению вручную.', false);
+    });
+  });
+
   $('send').addEventListener('click', function(){
     if(!validate()) return;
     var text = compose();
     showPreview(text);
     var subj = "Заявка ERP: " + val('area') + " — " + val('fio');
     location.href = "mailto:" + TO + "?subject=" + encodeURIComponent(subj) + "&body=" + encodeURIComponent(text);
-    flash('Открылось окно почты — проверьте и нажмите «Отправить». Если почта не открылась, используйте «Скопировать текст».', true);
+    flash('Открылось окно почты — проверьте и нажмите «Отправить».' +
+      (photos.length ? ' Фото приложите к письму вручную.' : '') +
+      ' Если почта не открылась — используйте «Скопировать текст».', true);
   });
 
   $('copy').addEventListener('click', function(){
@@ -298,7 +394,8 @@
     var text = compose();
     showPreview(text);
     function done(ok){
-      flash(ok ? 'Заявка скопирована — вставьте её в рабочий чат или письмо на ' + TO + '.'
+      flash(ok ? 'Заявка скопирована — вставьте её в рабочий чат или письмо на ' + TO + '.' +
+                 (photos.length ? ' Фото приложите к сообщению вручную.' : '')
                : 'Скопировать автоматически не вышло — выделите текст ниже вручную и скопируйте.', ok);
     }
     if(navigator.clipboard && navigator.clipboard.writeText){
