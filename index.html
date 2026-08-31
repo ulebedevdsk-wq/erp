@@ -79,6 +79,9 @@
   .thumb img{width:100%; height:100%; object-fit:cover; display:block}
   .thumb button{position:absolute; top:2px; right:2px; width:22px; height:22px; min-height:0; padding:0;
     border-radius:50%; border:none; background:rgba(0,45,114,.85); color:#FFFFFF; font-size:13px; line-height:1; cursor:pointer}
+  .thumb.doc{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; background:#F0F4F9}
+  .thumb.doc b{font-size:11px; color:var(--navy); font-weight:700; text-transform:uppercase; letter-spacing:.03em}
+  .thumb.doc small{font-size:9px; color:var(--steel); max-width:64px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
   .note{margin-top:12px; font-size:13px; color:var(--steel)}
   .flash{display:none; margin-top:14px; padding:11px 14px; border-radius:8px; font-size:14px; font-weight:500}
   .flash.ok{display:block; background:#E5F0E6; color:var(--ok); border:1px solid #BCD8BE}
@@ -170,11 +173,11 @@
     </div>
 
     <div class="field">
-      <label for="photos">Фото или скриншот <span class="opt">(до 3 шт., уйдут вместе с заявкой — камера, галерея или файл)</span></label>
-      <input type="file" id="photos" accept="image/*" multiple hidden>
-      <button type="button" class="btn-attach" id="attachBtn">Прикрепить фото / скриншот</button>
+      <label for="photos">Фото, скриншот или файл <span class="opt">(до 5 шт. — фото, PDF, таблица, документ; уйдут вместе с заявкой)</span></label>
+      <input type="file" id="photos" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.rtf,.odt,.ods" multiple hidden>
+      <button type="button" class="btn-attach" id="attachBtn">Прикрепить фото или файл</button>
       <div class="thumbs" id="thumbs"></div>
-      <p class="hint" id="shareHint" hidden>На этом устройстве фото не прикрепятся к заявке автоматически — отправьте текст кнопками ниже, а фото приложите к письму или сообщению вручную.</p>
+      <p class="hint" id="shareHint" hidden>На этом устройстве вложения не прикрепятся автоматически — отправьте текст кнопками ниже, а файлы приложите к письму или сообщению вручную.</p>
     </div>
 
     <fieldset>
@@ -202,12 +205,12 @@
     <div class="actions">
       <button type="button" class="btn-main" id="submitNet">Отправить заявку</button>
     </div>
-    <p class="note">Заявка вместе с фото уходит в оперативный штаб сразу — больше ничего делать не нужно.</p>
+    <p class="note">Заявка вместе с вложениями уходит в оперативный штаб сразу — больше ничего делать не нужно.</p>
     <div class="flash" id="flash" role="status"></div>
     <div id="fallback" hidden>
       <p class="hint" style="margin:16px 0 8px; font-weight:600; color:var(--navy)">Резервные способы отправки:</p>
       <div class="actions" style="margin-top:0">
-        <button type="button" class="btn-main" id="sendShare" hidden>Отправить с фото</button>
+        <button type="button" class="btn-main" id="sendShare" hidden>Отправить с вложениями</button>
         <button type="button" class="btn-sec" id="send">Отправить на почту</button>
         <button type="button" class="btn-sec" id="copy">Скопировать текст</button>
       </div>
@@ -298,7 +301,7 @@
       "Влияние: " + radio('impact'),
       "Мешает закрытию месяца: " + (radio('close') || "Не знаю"),
       "Где в программе: " + (val('place') || "—"),
-      "Фото: " + (photos.length ? photos.length + " шт. (приложены к сообщению)" : "нет"),
+      "Вложения: " + (photos.length ? photos.length + " шт. (приложены к сообщению)" : "нет"),
       "Описание: " + val('text'),
       "---",
       "Отправлено со страницы заявок оперативного штаба"
@@ -311,8 +314,13 @@
   }
   $('hidePrev').addEventListener('click', function(){ $('preview').style.display='none'; });
 
-  // --- Фото / скриншоты ---
-  var photos = []; var MAXP = 3;
+  // --- Вложения: фото и файлы ---
+  var photos = []; var MAXP = 5;
+  var MAXFILE = 8*1024*1024, MAXTOTAL = 15*1024*1024;
+  var DOC_RE = /\.(pdf|docx?|xlsx?|csv|txt|rtf|odt|ods)$/i;
+  function isImg(f){ return !!f.type && f.type.indexOf('image/')===0; }
+  function isDoc(f){ return DOC_RE.test(f.name||'') || /pdf|msword|officedocument|ms-excel|spreadsheet|text\/plain|csv|rtf/.test(f.type||''); }
+  function totalSize(){ var s=0; photos.forEach(function(f){ s+=f.size||0; }); return s; }
   function canSharePhotos(){
     try{ return photos.length>0 && !!navigator.canShare && navigator.canShare({files:photos}); }
     catch(e){ return false; }
@@ -325,12 +333,22 @@
   function renderThumbs(){
     var t = $('thumbs'); t.innerHTML='';
     photos.forEach(function(f,i){
-      var d=document.createElement('div'); d.className='thumb';
-      var im=document.createElement('img'); im.alt='фото '+(i+1); im.src=URL.createObjectURL(f);
+      var d=document.createElement('div');
+      if(isImg(f)){
+        d.className='thumb';
+        var im=document.createElement('img'); im.alt='фото '+(i+1); im.src=URL.createObjectURL(f);
+        d.appendChild(im);
+      } else {
+        d.className='thumb doc';
+        var b=document.createElement('b');
+        var m=(f.name||'').match(/\.(\w+)$/); b.textContent=m?m[1]:'файл';
+        var s=document.createElement('small'); s.textContent=f.name||'файл';
+        d.appendChild(b); d.appendChild(s);
+      }
       var x=document.createElement('button'); x.type='button'; x.textContent='×';
-      x.setAttribute('aria-label','Удалить фото '+(i+1));
+      x.setAttribute('aria-label','Удалить вложение '+(i+1));
       x.onclick=function(){ photos.splice(i,1); renderThumbs(); updatePhotoUI(); };
-      d.appendChild(im); d.appendChild(x); t.appendChild(d);
+      d.appendChild(x); t.appendChild(d);
     });
   }
   function compressImage(file){
@@ -359,15 +377,27 @@
     });
   }
   function addFiles(list){
-    var arr = Array.prototype.slice.call(list).filter(function(f){
-      return f && f.type && f.type.indexOf('image/')===0;
-    });
-    if(!arr.length) return;
+    var arr = Array.prototype.slice.call(list).filter(function(f){ return f && (isImg(f) || isDoc(f)); });
+    var skippedType = list.length - arr.length;
+    if(!arr.length){
+      if(skippedType) flash('Такой тип файла приложить нельзя. Подходят: фото, PDF, Word, Excel, CSV, txt.', false);
+      return;
+    }
     var room = MAXP - photos.length;
-    if(room<=0){ flash('Можно приложить не больше '+MAXP+' фото — удалите лишнее (крестик на миниатюре).', false); return; }
-    Promise.all(arr.slice(0,room).map(compressImage)).then(function(fs){
-      photos = photos.concat(fs); renderThumbs(); updatePhotoUI();
-      if(arr.length>room){ flash('Приложены первые '+room+' фото — максимум '+MAXP+'.', false); }
+    if(room<=0){ flash('Можно приложить не больше '+MAXP+' вложений — удалите лишнее (крестик на миниатюре).', false); return; }
+    var msgs = [];
+    if(skippedType) msgs.push('часть файлов пропущена — неподдерживаемый тип');
+    if(arr.length>room) msgs.push('взяты первые '+room+' (максимум '+MAXP+')');
+    Promise.all(arr.slice(0,room).map(function(f){
+      return isImg(f) ? compressImage(f) : Promise.resolve(f);
+    })).then(function(fs){
+      fs.forEach(function(f){
+        if((f.size||0) > MAXFILE){ msgs.push('«'+(f.name||'файл')+'» больше 8 МБ — не приложен'); return; }
+        if(totalSize() + (f.size||0) > MAXTOTAL){ msgs.push('суммарный размер вложений превысил 15 МБ — «'+(f.name||'файл')+'» не приложен'); return; }
+        photos.push(f);
+      });
+      renderThumbs(); updatePhotoUI();
+      if(msgs.length) flash('Вложения: '+msgs.join('; ')+'.', false);
     });
   }
   $('attachBtn').addEventListener('click', function(){ $('photos').click(); });
@@ -389,7 +419,7 @@
   function toB64(f){
     return new Promise(function(res, rej){
       var r = new FileReader();
-      r.onload = function(){ var s = String(r.result||''); res({data: s.slice(s.indexOf(',')+1), type: f.type||'image/jpeg'}); };
+      r.onload = function(){ var s = String(r.result||''); res({data: s.slice(s.indexOf(',')+1), type: f.type||'application/octet-stream', name: f.name||''}); };
       r.onerror = function(){ rej(r.error); };
       r.readAsDataURL(f);
     });
@@ -403,7 +433,7 @@
     fd.append('Телефон', val('phone') || '—'); fd.append('Область', val('area'));
     fd.append('Влияние', radio('impact')); fd.append('Мешает закрытию месяца', radio('close') || 'Не знаю');
     fd.append('Где в программе', val('place') || '—'); fd.append('Описание', val('text'));
-    fd.append('Фото', photos.length ? photos.length+' шт.' : 'нет');
+    fd.append('Вложения', photos.length ? photos.length+' шт.' : 'нет');
     photos.forEach(function(f,i){ fd.append('attachment'+(i+1), f, f.name || ('foto'+(i+1)+'.jpg')); });
     return fetch(FS, {method:'POST', body:fd, headers:{'Accept':'application/json'}})
       .then(function(r){ return r.json(); })
@@ -451,7 +481,7 @@
     var subj = "Заявка ERP: " + val('area') + " — " + val('fio');
     location.href = "mailto:" + TO + "?subject=" + encodeURIComponent(subj) + "&body=" + encodeURIComponent(text);
     flash('Открылось окно почты — проверьте и нажмите «Отправить».' +
-      (photos.length ? ' Фото приложите к письму вручную.' : '') +
+      (photos.length ? ' Вложения приложите к письму вручную.' : '') +
       ' Если почта не открылась — используйте «Скопировать текст».', true);
   });
 
@@ -461,7 +491,7 @@
     showPreview(text);
     function done(ok){
       flash(ok ? 'Заявка скопирована — вставьте её в рабочий чат или письмо на ' + TO + '.' +
-                 (photos.length ? ' Фото приложите к сообщению вручную.' : '')
+                 (photos.length ? ' Вложения приложите к сообщению вручную.' : '')
                : 'Скопировать автоматически не вышло — выделите текст ниже вручную и скопируйте.', ok);
     }
     if(navigator.clipboard && navigator.clipboard.writeText){
