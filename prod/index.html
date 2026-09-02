@@ -68,6 +68,7 @@
        font-weight:600; color:var(--navy); cursor:pointer; user-select:none; position:relative}
   .seg input{position:absolute; opacity:0; width:0; height:0}
   .seg.checked{border-color:var(--navy); background:#EEF4FB}
+  .segs.invalid .seg{border-color:var(--err); background:var(--err-bg)}
   /* Комбобокс мест хранения */
   .combo{position:relative}
   .combo input{padding-right:40px}
@@ -269,6 +270,15 @@
         </div>
       </div>
 
+      <fieldset class="field">
+        <legend>Влияет на отгрузку дефицитной позиции потребителю? <span class="req">*</span></legend>
+        <div class="segs" id="deficit">
+          <label class="seg"><input type="radio" name="deficit" value="Да">Да</label>
+          <label class="seg"><input type="radio" name="deficit" value="Нет">Нет</label>
+        </div>
+        <p class="hint" style="margin-top:6px">«Да» — заявка получает приоритет в работе штаба.</p>
+      </fieldset>
+
       <div class="field">
         <label for="text">Описание проблемы <span class="req" id="textReq">*</span><span class="opt" id="textOpt" hidden>(не обязательно)</span></label>
         <textarea id="text" placeholder="Что делали → что ожидали → что произошло."></textarea>
@@ -383,7 +393,7 @@
   function hideFlash(){ $('flash').className='flash'; }
 
   // --- Плитки типа и сегменты смены: подсветка выбранного ---
-  ['types','shift'].forEach(function(id){
+  ['types','shift','deficit'].forEach(function(id){
     var g = $(id);
     g.addEventListener('change', function(){
       g.querySelectorAll('label').forEach(function(l){ l.classList.toggle('checked', l.querySelector('input').checked); });
@@ -513,6 +523,7 @@
     if(rule.req.indexOf('shift')>=0){ var s = !!radio('shift'); $('shift').classList.toggle('invalid', !s); if(!s){ bad.push($('shift')); names.push('Смена'); } }
     ['operator','sku','lot','order','contragent','clientOrder','street','qtyAcc','qtyFact'].forEach(function(k){ if(rule.req.indexOf(k)>=0) mark($(k), !val(k), FIELD_NAMES[k]); });
     if(rule.text) mark($('text'), !val('text'), 'Описание проблемы');
+    if(!radio('deficit')){ $('deficit').classList.add('invalid'); bad.push($('deficit')); names.push('Влияет на отгрузку дефицитной позиции'); } else $('deficit').classList.remove('invalid');
     if(bad.length){
       flash('Заполните обязательные поля: ' + names.join(', ') + '.', false);
       bad[0].scrollIntoView({behavior:'smooth', block:'center'});
@@ -539,6 +550,7 @@
       street:     has('street')     ? val('street') : '',
       qtyAcc:     has('qtyAcc')     ? val('qtyAcc') : '',
       qtyFact:    has('qtyFact')    ? val('qtyFact') : '',
+      deficit: radio('deficit'),
       text:   val('text')
     };
   }
@@ -564,6 +576,7 @@
     if(p.street)     lines.push("№ улицы: " + p.street);
     if(p.qtyAcc)     lines.push("Кол-во по учёту: " + p.qtyAcc);
     if(p.qtyFact)    lines.push("Кол-во фактическое: " + p.qtyFact);
+    lines.push("Влияет на отгрузку дефицитной позиции: " + (p.deficit || "—"));
     lines.push("Вложения: " + (photos.length ? photos.length + " шт. (приложены к сообщению)" : "нет"));
     lines.push("Описание: " + (p.text || "—"));
     lines.push("---", "Отправлено со страницы заявок производства и складов");
@@ -664,7 +677,7 @@
     flash('Заявка '+num+' отправлена в штаб. Спасибо! Можно закрыть страницу или описать следующую проблему.', true);
     ['text','sku','lot','place1','place2','operator','order','contragent','clientOrder','street','qtyAcc','qtyFact'].forEach(function(id){ $(id).value=''; });
     document.querySelectorAll('.combo .clr').forEach(function(b){ b.hidden=true; });
-    var s=document.querySelector('input[name=shift]:checked'); if(s){ s.checked=false; s.closest('.seg').classList.remove('checked'); }
+    ['shift','deficit'].forEach(function(n){ var s=document.querySelector('input[name='+n+']:checked'); if(s){ s.checked=false; s.closest('.seg').classList.remove('checked'); } });
     photos=[]; renderThumbs(); updatePhotoUI();
     $('preview').style.display='none';
     hideFlash();
@@ -704,6 +717,7 @@
     if(p.street)     fd.append('№ улицы', p.street);
     if(p.qtyAcc)     fd.append('Кол-во по учёту', p.qtyAcc);
     if(p.qtyFact)    fd.append('Кол-во фактическое', p.qtyFact);
+    fd.append('Влияет на отгрузку дефицитной позиции', p.deficit || '—');
     fd.append('Описание', p.text || '—');
     fd.append('Вложения', photos.length ? photos.length+' шт.' : 'нет');
     photos.forEach(function(f,i){ fd.append('attachment'+(i+1), f, f.name || ('foto'+(i+1)+'.jpg')); });
