@@ -174,7 +174,7 @@
       </div>
 
       <div class="field" data-for="Выпуск Расстановка">
-        <label for="operator">ФИО оператора <span class="req">*</span></label>
+        <label for="operator">ФИО оператора <span class="opt">(не обязательно)</span></label>
         <input type="text" id="operator" autocomplete="off" placeholder="кто выполнял операцию в 1С">
       </div>
 
@@ -185,7 +185,7 @@
           <button type="button" class="clr" aria-label="Очистить" hidden>×</button>
           <ul role="listbox"></ul>
         </div>
-        <p class="hint">Выберите из списка мест хранения — как в 1С.</p>
+        <p class="hint" id="place1Hint">Выберите из списка мест хранения — как в 1С.</p>
       </div>
 
       <div class="field" data-for="Перемещение">
@@ -276,7 +276,8 @@
   var FS  = "https://formsubmit.co/ajax/u.lebedev.dsk@gmail.com"; // резервная доставка (FormSubmit, активирован)
   var GAS = "https://script.google.com/macros/s/AKfycbytD7kldGQ19c9BtNwsZOAH3Ogx9jGLc89B4YVU0_bj9OpcDssc-zeoZEKmrLLBPBbWoQ/exec";                              // URL веб-приложения Apps Script (…/exec) новой таблицы
   var PREFIX = "ПР";                                    // префикс номера заявки: ПР-ДДММ-ЧЧММ-ИИ
-  var PLACES = ["Цеховая кладовая SASS", "Цеховая кладовая АИДА", "Цеховая кладовая АЛП", "Цеховая кладовая БВК", "Цеховая кладовая бензобаков", "Цеховая кладовая крупной вырубки", "Цеховая кладовая мелкой вырубки", "Цеховая кладовая мультислайдов", "Цеховая кладовая сборки лючков", "Цеховая кладовая сварки", "Цеховая кладовая средней штамповки", "Цеховая кладовая традиционной штамповки", "Цеховая кладовая участка по резке металла", "Цеховая кладовая участка упаковки", "Изолятор брака SASS", "Изолятор брака АИДА", "Изолятор брака АЛП", "Изолятор брака БВК", "Изолятор брака бензобаков", "Изолятор брака крупной вырубки", "Изолятор брака мелкой вырубки", "Изолятор брака мультислайдов", "Изолятор брака сборки лючков", "Изолятор брака сварки", "Изолятор брака средней штамповки", "Изолятор брака традиционной штамповки", "Изолятор брака (ПДО)", "Изолятор брака (ПДО) (Хилти)", "Изолятор брака склада заготовок", "Изолятор брака склада металла", "Склад временного хранения", "Склад вспомогательных материалов", "Склад газового хозяйства", "Склад готовой продукции", "Склад давальческого металла", "Склад заготовок", "Склад запасных частей", "Склад запасных частей ОАЭСП", "Склад инструментального хозяйства", "Склад металла", "Склад металлолома", "Склад оборудования и штамповой оснастки", "Склад опытн ДСК-Штамп", "Склад опытный готовой продукции", "Склад опытный заготовок", "Склад опытный металла", "Склад ОС", "Склад ответхранения металла", "Склад ОТК", "Склад покупных комплектующих изделий", "Склад спецодежды и спецоснастки", "Склад упаковки", "Участок дополнительного контроля", "Участок Замеры", "Участок переборки склада заготовок"];                              // справочник мест хранения (как в 1С)
+  var PLACES = ["Цеховая кладовая SASS", "Цеховая кладовая АИДА", "Цеховая кладовая АЛП", "Цеховая кладовая БВК", "Цеховая кладовая бензобаков", "Цеховая кладовая крупной вырубки", "Цеховая кладовая мелкой вырубки", "Цеховая кладовая мультислайдов", "Цеховая кладовая сборки лючков", "Цеховая кладовая сварки", "Цеховая кладовая средней штамповки", "Цеховая кладовая традиционной штамповки", "Цеховая кладовая участка по резке металла", "Цеховая кладовая участка упаковки", "Изолятор брака SASS", "Изолятор брака АИДА", "Изолятор брака АЛП", "Изолятор брака БВК", "Изолятор брака бензобаков", "Изолятор брака крупной вырубки", "Изолятор брака мелкой вырубки", "Изолятор брака мультислайдов", "Изолятор брака сборки лючков", "Изолятор брака сварки", "Изолятор брака средней штамповки", "Изолятор брака традиционной штамповки", "Изолятор брака (ПДО)", "Изолятор брака (ПДО) (Хилти)", "Изолятор брака склада заготовок", "Изолятор брака склада металла", "Склад временного хранения", "Склад вспомогательных материалов", "Склад газового хозяйства", "Склад готовой продукции", "Склад давальческого металла", "Склад заготовок", "Склад запасных частей", "Склад запасных частей ОАЭСП", "Склад инструментального хозяйства", "Склад металла", "Склад металлолома", "Склад оборудования и штамповой оснастки", "Склад опытн ДСК-Штамп", "Склад опытный готовой продукции", "Склад опытный заготовок", "Склад опытный металла", "Склад ОС", "Склад ответхранения металла", "Склад ОТК", "Склад покупных комплектующих изделий", "Склад спецодежды и спецоснастки", "Склад упаковки", "Участок дополнительного контроля", "Участок Замеры", "Участок переборки склада заготовок"];                              // места хранения (как в 1С) — для «Перемещения»
+  var AREAS  = ["Участок АЛП", "Участок АИДА", "Участок бензобаков", "Участок крупной вырубки", "Участок БВК", "Участок традиционной штамповки", "Участок мультислайдов", "Участок SASS", "Участок средней штамповки", "Участок сварки", "Участок сборки лючков", "Участок мелкой вырубки"];                               // производственные участки — для «Выпуска», «Расстановки», «Отчёта мастера»
   // ===========================
 
   var $ = function(id){ return document.getElementById(id); };
@@ -284,11 +285,11 @@
 
   // Какие поля обязательны для каждого типа проблемы (по ТЗ)
   var RULES = {
-    "Перемещение":   { req:["place1","place2","sku","lot"],      text:false, place1:"Участок — откуда" },
-    "Выпуск":        { req:["place1","shift","sku","operator"],  text:true,  place1:"Участок" },
-    "Расстановка":   { req:["place1","shift","sku","operator"],  text:true,  place1:"Участок" },
-    "Отчет мастера": { req:["place1","shift"],              text:true,  place1:"Участок" },
-    "Другое":        { req:[],                              text:true,  place1:"Участок" }
+    "Перемещение":   { req:["place1","place2","sku","lot"], text:false, place1:"Участок — откуда", list:"PLACES", hint:"Выберите из списка мест хранения — как в 1С." },
+    "Выпуск":        { req:["place1","shift","sku"],        text:true,  place1:"Участок", list:"AREAS", hint:"Выберите производственный участок." },
+    "Расстановка":   { req:["place1","shift","sku"],        text:true,  place1:"Участок", list:"AREAS", hint:"Выберите производственный участок." },
+    "Отчет мастера": { req:["place1","shift"],              text:true,  place1:"Участок", list:"AREAS", hint:"Выберите производственный участок." },
+    "Другое":        { req:[],                              text:true,  place1:"Участок", list:"AREAS", hint:"" }
   };
 
   function radio(name){
@@ -324,6 +325,8 @@
     });
     $('skuGrid').hidden = !!$('skuGrid').querySelectorAll('.field:not([hidden])').length ? false : true;
     $('place1Label').textContent = rule.place1;
+    $('place1Hint').textContent = rule.hint;
+    if(combo1.listName !== rule.list){ combo1.setList(rule.list === "AREAS" ? AREAS : PLACES, rule.list); }
     $('textReq').hidden = !rule.text; $('textOpt').hidden = rule.text;
     $('text').classList.remove('invalid');
     hideFlash();
@@ -332,10 +335,13 @@
 
   // --- Комбобокс мест хранения ---
   function norm(s){ return String(s||'').toLowerCase().replace(/ё/g,'е').replace(/\s+/g,' ').trim(); }
-  var NPLACES = PLACES.map(norm);
-  function makeCombo(root){
+  function makeCombo(root, list, listName){
     var inp = root.querySelector('input'), ul = root.querySelector('ul'), clr = root.querySelector('.clr');
     var items = [], active = -1;
+    var PLACES = list, NPLACES = list.map(norm);
+    var api = { listName: listName,
+      setList: function(l, name){ PLACES = l; NPLACES = l.map(norm); api.listName = name; inp.value=''; clr.hidden = true; close(); },
+      valid: function(){ return PLACES.indexOf(inp.value.trim())>=0; } };
     function render(q){
       var nq = norm(q); items = [];
       PLACES.forEach(function(p,i){ if(!nq || NPLACES[i].indexOf(nq)>=0) items.push(p); });
@@ -390,9 +396,9 @@
       else if(e.key==='Escape'){ close(); }
     });
     clr.addEventListener('click', function(){ inp.value=''; clr.hidden=true; inp.focus(); });
-    return { valid:function(){ return PLACES.indexOf(inp.value.trim())>=0; } };
+    return api;
   }
-  var combo1 = makeCombo($('combo1')), combo2 = makeCombo($('combo2'));
+  var combo1 = makeCombo($('combo1'), PLACES, "PLACES"), combo2 = makeCombo($('combo2'), PLACES, "PLACES");
   document.addEventListener('click', function(e){
     if(!e.target.closest('.combo')) document.querySelectorAll('.combo ul').forEach(function(u){ u.classList.remove('open'); });
   });
@@ -416,7 +422,6 @@
     function mark(el, empty, name){ el.classList.toggle('invalid', empty); if(empty){ bad.push(el); names.push(name); } }
     mark($('fio'), !val('fio'), 'ФИ контактного лица');
     mark($('phone'), !val('phone'), 'Тел. контактного лица');
-    if(rule.req.indexOf('operator')>=0) mark($('operator'), !val('operator'), 'ФИО оператора');
     if(rule.req.indexOf('place1')>=0){
       var ok1 = combo1.valid(); mark($('place1'), !ok1, rule.place1 + (val('place1') && !ok1 ? ' (выберите из списка)' : ''));
     }
@@ -441,7 +446,7 @@
     var has = function(k){ return rule.req.indexOf(k)>=0; };
     return {
       num:num, date:dstr(d), type:t, fio:val('fio'), phone:val('phone'),
-      operator: has('operator') ? val('operator') : '',
+      operator: (t==='Выпуск'||t==='Расстановка') ? val('operator') : '',
       place1: has('place1') ? val('place1') : '',
       place2: has('place2') ? val('place2') : '',
       shift:  has('shift')  ? radio('shift') : '',
