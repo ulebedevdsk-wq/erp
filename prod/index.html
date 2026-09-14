@@ -735,17 +735,34 @@
       flash('Автоматическая отправка не сработала (нет связи или сервис недоступен). Ниже — резервные способы: текст заявки уже готов.', false);
       showPreview(compose(num));
     };
+    // Ответ от Apps Script иногда не доходит (канал до google), хотя заявка уже записана.
+    // Поэтому: отправка → если ответа нет, проверяем по номеру, дошла ли она; повторная отправка дубля не создаёт (защита в скрипте).
+    var postGas = function(ms){
+      var ctrl = (typeof AbortController!=='undefined') ? new AbortController() : null;
+      var tm = ctrl ? setTimeout(function(){ ctrl.abort(); }, ms) : null;
+      return fetch(GAS, {method:'POST', body: JSON.stringify(p), signal: ctrl?ctrl.signal:undefined}) // без заголовков — «simple request», без CORS-preflight
+        .then(function(r){ return r.json(); })
+        .then(function(j){ if(tm) clearTimeout(tm); if(!(j && j.ok)) throw new Error(j && j.error || 'gas failed'); })
+        .catch(function(e){ if(tm) clearTimeout(tm); throw e; });
+    };
+    var checkGas = function(){ // дошла ли заявка: лёгкий запрос, ответ маленький
+      var ctrl = (typeof AbortController!=='undefined') ? new AbortController() : null;
+      var tm = ctrl ? setTimeout(function(){ ctrl.abort(); }, 15000) : null;
+      return fetch(GAS + '?num=' + encodeURIComponent(num), {signal: ctrl?ctrl.signal:undefined})
+        .then(function(r){ return r.json(); })
+        .then(function(j){ if(tm) clearTimeout(tm); if(!(j && j.found)) throw new Error('not found'); })
+        .catch(function(e){ if(tm) clearTimeout(tm); throw e; });
+    };
+    var wait = function(ms){ return new Promise(function(res){ setTimeout(res, ms); }); };
     Promise.all(photos.map(toB64)).catch(function(){ return []; }).then(function(files){
       p.files = files;
-      var ctrl = (typeof AbortController!=='undefined') ? new AbortController() : null;
-      var tm = ctrl ? setTimeout(function(){ ctrl.abort(); }, 40000) : null;
       var gasOk = /^https:\/\/script\.google\.com\//.test(GAS);
-      var first = gasOk
-        ? fetch(GAS, {method:'POST', body: JSON.stringify(p), signal: ctrl?ctrl.signal:undefined}) // без заголовков — «simple request», без CORS-preflight
-            .then(function(r){ return r.json(); })
-            .then(function(j){ if(tm) clearTimeout(tm); if(!(j && j.ok)) throw new Error(j && j.error || 'gas failed'); })
-        : Promise.reject(new Error('GAS не настроен'));
-      return first.catch(function(){ if(tm) clearTimeout(tm); return sendFS(p); });
+      if(!gasOk) return sendFS(p);
+      return postGas(45000)                                            // 1) обычная отправка
+        .catch(function(){ return wait(2000).then(checkGas); })        // 2) ответ не дошёл — заявка всё-таки записалась?
+        .catch(function(){ return postGas(45000); })                   // 3) нет — отправляем ещё раз (дубль скрипт отсечёт)
+        .catch(function(){ return wait(3000).then(checkGas); })        // 4) и снова проверяем
+        .catch(function(){ return sendFS(p); });                       // 5) совсем никак — резервный канал письмом
     }).then(function(){ onSent(num); }).catch(fail);
   });
 
