@@ -194,8 +194,8 @@
           <input type="text" id="fio" autocomplete="name" placeholder="кто сообщает о проблеме">
         </div>
         <div class="field">
-          <label for="phone">Тел. контактного лица <span class="req">*</span></label>
-          <input type="tel" id="phone" autocomplete="tel" placeholder="внутренний или мобильный">
+          <label for="phone">Мобильный телефон контактного лица <span class="req">*</span></label>
+          <input type="tel" id="phone" autocomplete="tel" inputmode="tel" placeholder="мобильный, не внутренний">
         </div>
       </div>
 
@@ -511,7 +511,7 @@
     var rule = RULES[t], bad = [], names = [];
     function mark(el, empty, name){ el.classList.toggle('invalid', empty); if(empty){ bad.push(el); names.push(name); } }
     mark($('fio'), !val('fio'), 'ФИ контактного лица');
-    mark($('phone'), !val('phone'), 'Тел. контактного лица');
+    mark($('phone'), !val('phone'), 'Мобильный телефон контактного лица');
     if(rule.req.indexOf('place1')>=0){
       var ok1 = combo1.valid(); mark($('place1'), !ok1, rule.place1 + (val('place1') && !ok1 ? ' (выберите из списка)' : ''));
     }
