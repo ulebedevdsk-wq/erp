@@ -51,6 +51,7 @@
   section:first-of-type h2{margin-top:0}
 
   .grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px}
+  .grid.one{grid-template-columns:1fr}
   @media (max-width:600px){ .grid{grid-template-columns:1fr} }
 
   .card{
@@ -183,8 +184,8 @@
   </section>
 
   <section aria-labelledby="h-more">
-    <h2 id="h-more">Подать заявку и поддержка</h2>
-    <div class="grid">
+    <h2 id="h-more">Подать заявку</h2>
+    <div class="grid one">
 
       <a class="card sm a2" href="https://ulebedevdsk-wq.github.io/erp/prod/" target="_blank" rel="noopener">
         <span class="ico" aria-hidden="true">
@@ -194,17 +195,6 @@
           <h3>Форма заявок производства</h3>
           <p>Сообщить о проблеме в ERP с участка или склада — заявка сразу попадает в GLPI и в таблицу штаба.</p>
           <span class="go">Открыть форму</span>
-        </span>
-      </a>
-
-      <a class="card sm a1" href="https://helpdesk.groupdsk.ru" target="_blank" rel="noopener">
-        <span class="ico" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#002D72" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
-        </span>
-        <span class="txt">
-          <h3>Хелпдеск GLPI</h3>
-          <p>Тикеты, статусы и история обращений в ИТ. Нужна учётная запись GLPI.</p>
-          <span class="go">Открыть</span>
         </span>
       </a>
 
