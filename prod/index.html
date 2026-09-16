@@ -181,6 +181,8 @@
           <b>Штабелёры</b><small>работа штабелёров, улицы</small></label>
         <label class="type"><input type="radio" name="type" value="Проблемная банка">
           <b>Проблемная банка</b><small>расхождение по банке (таре)</small></label>
+        <label class="type"><input type="radio" name="type" value="Упаковка">
+          <b>Упаковка</b><small>тара, упаковочный лист</small></label>
         <label class="type"><input type="radio" name="type" value="Другое">
           <b>Другое</b><small>всё остальное</small></label>
       </div>
@@ -376,6 +378,7 @@
     "Приёмка на склад": { show:["place1","sku","lot"], req:["place1"], text:true, place1:"Склад", list:P, hint:"Выберите склад из списка." },
     "Проблемная банка": { show:["operator","place1","sku","lot","qtyAcc","qtyFact"], req:["operator","place1","sku"], text:true,
                        place1:"Место хранения — откуда", list:P, hint:"Выберите из списка мест хранения — как в 1С." },
+    "Упаковка":      { show:["sku","lot"], req:[], text:true, place1:"Участок", list:P, hint:"" },
     "Другое":        { show:[], req:[], text:true, place1:"Участок", list:A, hint:"" }
   };
   var FIELD_NAMES = { operator:"ФИО оператора", shift:"Смена", sku:"Артикул", lot:"Серия", order:"Номер заказа материалов",
