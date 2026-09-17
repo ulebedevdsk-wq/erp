@@ -166,6 +166,8 @@ h1 { font-size:clamp(28px,6vw,42px); line-height:1.05; text-transform:uppercase;
   box-shadow:var(--shadow); padding:22px; }
 .ask h2 { font-size:clamp(20px,4vw,26px); text-transform:uppercase; }
 .ask-sub { color:var(--muted); margin-top:6px; }
+.ask-role { display:inline-block; margin-top:4px; }
+.ask-role b { color:var(--ink); }
 .ask-step { margin-top:18px; border-top:1px solid var(--hair); padding-top:16px; }
 .ask-q { font-family:"Oswald",sans-serif; font-size:13px; letter-spacing:.14em; text-transform:uppercase;
   color:var(--navy); margin-bottom:10px; }
@@ -190,7 +192,6 @@ button.btn { font-family:"Oswald",sans-serif; font-size:15px; letter-spacing:.06
     <p class="kicker">1С:ERP · производство и склады</p>
     <h1>Что делать на своём месте</h1>
     <p class="sub">Выберите свою роль. Сверху — что делать каждую смену, чтобы не ломалось. Ниже — что делать, если уже сломалось, и когда пора писать в ИТ.</p>
-    <p class="cta"><a class="btn" href="#ask">Подать заявку в ИТ</a></p>
   </div>
 
   <p class="pick">Ваша роль</p>
@@ -287,7 +288,6 @@ button.btn { font-family:"Oswald",sans-serif; font-size:15px; letter-spacing:.06
 </article>
 </div></div>
 <p class="channel"><span>Канал обращения в ИТ</span><b>Заявка через форму по QR-коду</b></p>
-<p class="cta cta-role"><a class="btn" href="form/">Подать заявку через форму</a></p>
 </section>
 <section class="role" id="r-operator" hidden>
 <header class="role-head">
@@ -377,7 +377,6 @@ button.btn { font-family:"Oswald",sans-serif; font-size:15px; letter-spacing:.06
 </article>
 </div></div>
 <p class="channel"><span>Канал обращения в ИТ</span><b>Письмо на support1c@groupdsk.ru</b></p>
-<p class="cta cta-role"><a class="btn btn-mail" href="#ask" data-who="office">Написать письмо в ИТ</a></p>
 </section>
 <section class="role" id="r-storeman" hidden>
 <header class="role-head">
@@ -436,7 +435,6 @@ button.btn { font-family:"Oswald",sans-serif; font-size:15px; letter-spacing:.06
 </article>
 </div></div>
 <p class="channel"><span>Канал обращения в ИТ</span><b>Заявка через форму по QR-коду</b></p>
-<p class="cta cta-role"><a class="btn" href="form/">Подать заявку через форму</a></p>
 </section>
 <section class="role" id="r-senior" hidden>
 <header class="role-head">
@@ -480,7 +478,6 @@ button.btn { font-family:"Oswald",sans-serif; font-size:15px; letter-spacing:.06
 </article>
 </div></div>
 <p class="channel"><span>Канал обращения в ИТ</span><b>Заявка через форму по QR-коду</b></p>
-<p class="cta cta-role"><a class="btn" href="form/">Подать заявку через форму</a></p>
 </section>
 <section class="role" id="r-chief" hidden>
 <header class="role-head">
@@ -535,7 +532,6 @@ button.btn { font-family:"Oswald",sans-serif; font-size:15px; letter-spacing:.06
 </article>
 </div></div>
 <p class="channel"><span>Канал обращения в ИТ</span><b>Заявка через форму по QR-коду</b></p>
-<p class="cta cta-role"><a class="btn" href="form/">Подать заявку через форму</a></p>
 </section>
 <section class="role" id="r-tech" hidden>
 <header class="role-head">
@@ -566,7 +562,6 @@ button.btn { font-family:"Oswald",sans-serif; font-size:15px; letter-spacing:.06
 </article>
 </div></div>
 <p class="channel"><span>Канал обращения в ИТ</span><b>Письмо на support1c@groupdsk.ru</b></p>
-<p class="cta cta-role"><a class="btn btn-mail" href="#ask" data-who="office">Написать письмо в ИТ</a></p>
 </section>
 <section class="role" id="r-buh" hidden>
 <header class="role-head">
@@ -596,7 +591,6 @@ button.btn { font-family:"Oswald",sans-serif; font-size:15px; letter-spacing:.06
 </article>
 </div></div>
 <p class="channel"><span>Канал обращения в ИТ</span><b>Письмо на support1c@groupdsk.ru</b></p>
-<p class="cta cta-role"><a class="btn btn-mail" href="#ask" data-who="office">Написать письмо в ИТ</a></p>
 </section>
 <section class="role" id="r-it" hidden>
 <header class="role-head">
@@ -649,26 +643,22 @@ button.btn { font-family:"Oswald",sans-serif; font-size:15px; letter-spacing:.06
 </article>
 </div></div>
 <p class="channel"><span>Канал обращения в ИТ</span><b>Форма по QR и почта support1c@groupdsk.ru</b></p>
-<p class="cta cta-role"><a class="btn" href="#ask">Подать заявку</a></p>
 </section>
 
 <section class="ask" id="ask">
   <h2>Не нашли ответ?</h2>
-  <p class="ask-sub">Подайте заявку — штаб внедрения разберёт и вернётся с решением.</p>
-  <p class="cta"><button class="btn" type="button" id="askStart">Подать заявку</button></p>
+  <p class="ask-sub">Подайте заявку — штаб внедрения разберёт и вернётся с решением.<br>
+  <span class="ask-role">Ваша роль: <b id="askRole">—</b></span></p>
 
-  <div class="ask-step" id="askWho" hidden>
-    <p class="ask-q">Кто подаёт заявку?</p>
-    <div class="ask-opts">
-      <button class="btn" type="button" data-who="prod">Производство или склад</button>
-      <button class="btn btn-mail" type="button" data-who="office">Офис</button>
-    </div>
-    <p class="ask-hint">Офис — плановый отдел, технологи, бухгалтерия, снабжение, экономисты. Цех и склад подают заявку формой, офис пишет письмом.</p>
+  <div class="ask-step" id="askForm" hidden>
+    <p class="ask-q">Цех и склад — заявка через форму</p>
+    <p>Заявка сразу попадает в штаб и в реестр. Чем точнее артикул и участок, тем быстрее решим.</p>
+    <p class="cta"><a class="btn" href="form/">Подать заявку</a></p>
   </div>
 
-  <div class="ask-step" id="askOffice" hidden>
-    <p class="ask-q">Офис пишет письмом</p>
-    <p>Заявки от офиса принимаются по почте <b>support1c@groupdsk.ru</b> — форма по QR-коду сделана для цеха и склада.</p>
+  <div class="ask-step" id="askMail" hidden>
+    <p class="ask-q">Офис — заявка письмом</p>
+    <p>Заявки от планового отдела, технологов и бухгалтерии принимаются по почте <b>support1c@groupdsk.ru</b> — форма по QR-коду сделана для цеха и склада.</p>
     <p class="ask-what">Что указать в письме:</p>
     <ul class="ask-list">
       <li>кто пишет: ФИО, подразделение, телефон;</li>
@@ -680,6 +670,11 @@ button.btn { font-family:"Oswald",sans-serif; font-size:15px; letter-spacing:.06
     </ul>
     <p class="cta"><a class="btn" id="mailLink" href="mailto:support1c@groupdsk.ru">Написать письмо</a></p>
     <p class="ask-hint">Если письмо не открылось — напишите вручную на support1c@groupdsk.ru.</p>
+  </div>
+
+  <div class="ask-step" id="askMaster" hidden>
+    <p class="ask-q">Оператор заявку не подаёт</p>
+    <p>Скажите мастеру участка — он проверит и оформит заявку по форме. Чем раньше сказали, тем проще исправить.</p>
   </div>
 </section>
 
@@ -721,11 +716,17 @@ button.btn { font-family:"Oswald",sans-serif; font-size:15px; letter-spacing:.06
 
 <script>
 (function () {
-  var FORM_URL = 'form/';
   var MAIL = 'support1c@groupdsk.ru';
-  var ask = document.getElementById('ask');
-  var who = document.getElementById('askWho');
-  var office = document.getElementById('askOffice');
+  var CHANNEL = {            // канал обращения по роли — как в памятке
+    master: 'form', storeman: 'form', senior: 'form', chief: 'form',
+    planner: 'mail', tech: 'mail', buh: 'mail',
+    operator: 'master',
+    it: 'both'
+  };
+  var box = { form: document.getElementById('askForm'),
+              mail: document.getElementById('askMail'),
+              master: document.getElementById('askMaster') };
+  var roleName = document.getElementById('askRole');
 
   document.getElementById('mailLink').href = 'mailto:' + MAIL +
     '?subject=' + encodeURIComponent('Заявка в ИТ — 1С:ERP') +
@@ -738,28 +739,23 @@ button.btn { font-family:"Oswald",sans-serif; font-size:15px; letter-spacing:.06
       'Артикул / серия: \n' +
       'Срочно (стоит ли работа или отгрузка): \n');
 
-  function openWho() {
-    who.hidden = false; office.hidden = true;
-    ask.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  function current() {
+    var open = document.querySelector('.role:not([hidden])');
+    return open ? open.id.replace('r-', '') : 'master';
   }
-  function openOffice() {
-    who.hidden = false; office.hidden = false;
-    office.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  function apply() {
+    var key = current();
+    var ch = CHANNEL[key] || 'form';
+    box.form.hidden   = !(ch === 'form' || ch === 'both');
+    box.mail.hidden   = !(ch === 'mail' || ch === 'both');
+    box.master.hidden = ch !== 'master';
+    var tab = document.getElementById('tab-' + key);
+    var nm = tab ? (tab.querySelector('.tab-name') || {}).textContent : '';
+    roleName.textContent = nm || '—';
   }
 
-  document.getElementById('askStart').addEventListener('click', openWho);
-  who.addEventListener('click', function (ev) {
-    var b = ev.target.closest('[data-who]');
-    if (!b) return;
-    if (b.getAttribute('data-who') === 'prod') location.href = FORM_URL;
-    else openOffice();
-  });
-  document.addEventListener('click', function (ev) {
-    var a = ev.target.closest('a[href="#ask"]');
-    if (!a) return;
-    ev.preventDefault();
-    if (a.getAttribute('data-who') === 'office') openOffice(); else openWho();
-  });
+  apply();
+  document.getElementById('tabs').addEventListener('click', function () { setTimeout(apply, 0); });
 })();
 </script>
 </body>
