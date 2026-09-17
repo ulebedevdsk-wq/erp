@@ -290,12 +290,12 @@
         <p class="hint" style="margin-top:6px">«Да» — заявка получает приоритет в работе штаба.</p>
       </fieldset>
 
-      <div class="field">
+      <div class="field" id="textField">
         <label for="text">Описание проблемы <span class="req" id="textReq">*</span><span class="opt" id="textOpt" hidden>(не обязательно)</span></label>
         <textarea id="text" placeholder="Что делали → что ожидали → что произошло."></textarea>
       </div>
 
-      <div class="field">
+      <div class="field" id="filesField">
         <label for="photos">Фото, скриншот или файл <span class="opt">(не обязательно, до 5 шт.)</span></label>
         <input type="file" id="photos" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.rtf,.odt,.ods" multiple hidden>
         <button type="button" class="btn-attach" id="attachBtn">Прикрепить фото или файл</button>
@@ -389,6 +389,7 @@
                        place1:"Место хранения — откуда", list:P, hint:"Выберите из списка мест хранения — как в 1С." },
     "Упаковка":      { show:["sku","lot"], req:[], text:true, place1:"Участок", list:P, hint:"" },
     "Заказать заготовку не попавшую в заказ": { show:["place2","sku","qty"], req:["place2","sku","qty"], text:false,
+                       noText:true, noFiles:true,
                        place1:"Участок", place2:"Производственный участок", list:A, list2:A,
                        hint:"Заявка уйдёт в таблицу выдачи заготовок, а не в ИТ." },
     "Другое":        { show:[], req:[], text:true, place1:"Участок", list:A, hint:"" }
@@ -435,6 +436,9 @@
     var l2 = rule.list2 || P;
     if(combo2.listName !== l2){ combo2.setList(l2 === A ? AREAS : PLACES, l2); }
     $('textReq').hidden = !rule.text; $('textOpt').hidden = rule.text;
+    $('textField').hidden = !!rule.noText;  if(rule.noText){ $('text').value = ''; }
+    $('filesField').hidden = !!rule.noFiles;
+    if(rule.noFiles && typeof photos !== 'undefined' && photos.length){ photos.length = 0; renderThumbs(); updatePhotoUI(); }
     $('text').classList.remove('invalid');
     hideFlash();
   }
