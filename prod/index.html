@@ -306,7 +306,7 @@
       <div class="actions">
         <button type="button" class="btn-main" id="submitNet">Отправить заявку</button>
       </div>
-      <p class="note">Заявка вместе с вложениями уходит в штаб сразу — больше ничего делать не нужно.</p>
+      <p class="note" id="sendNote">Заявка вместе с вложениями уходит в штаб сразу — больше ничего делать не нужно.</p>
     </div>
 
     <div class="flash" id="flash" role="status"></div>
@@ -438,6 +438,8 @@
     $('textReq').hidden = !rule.text; $('textOpt').hidden = rule.text;
     $('textField').hidden = !!rule.noText;  if(rule.noText){ $('text').value = ''; }
     $('filesField').hidden = !!rule.noFiles;
+    $('sendNote').textContent = rule.noFiles ? 'Заявка уходит в штаб сразу — больше ничего делать не нужно.'
+                                             : 'Заявка вместе с вложениями уходит в штаб сразу — больше ничего делать не нужно.';
     if(rule.noFiles && typeof photos !== 'undefined' && photos.length){ photos.length = 0; renderThumbs(); updatePhotoUI(); }
     $('text').classList.remove('invalid');
     hideFlash();
