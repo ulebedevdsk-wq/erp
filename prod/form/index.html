@@ -201,8 +201,12 @@
           <input type="text" id="fio" autocomplete="name" placeholder="кто сообщает о проблеме">
         </div>
         <div class="field">
-          <label for="phone">Мобильный телефон контактного лица <span class="req">*</span></label>
+          <label for="phone">Моб. телефон контактного лица <span class="req">*</span></label>
           <input type="tel" id="phone" autocomplete="tel" inputmode="tel" placeholder="мобильный, не внутренний">
+        </div>
+        <div class="field">
+          <label for="email">E-mail контактного лица <span class="opt">(если есть)</span></label>
+          <input type="email" id="email" autocomplete="email" inputmode="email" placeholder="чтобы прислать ответ на почту">
         </div>
       </div>
 
@@ -534,7 +538,7 @@
     var rule = RULES[t], bad = [], names = [];
     function mark(el, empty, name){ el.classList.toggle('invalid', empty); if(empty){ bad.push(el); names.push(name); } }
     mark($('fio'), !val('fio'), 'ФИ контактного лица');
-    mark($('phone'), !val('phone'), 'Мобильный телефон контактного лица');
+    mark($('phone'), !val('phone'), 'Моб. телефон контактного лица');
     if(rule.req.indexOf('place1')>=0){
       var ok1 = combo1.valid(); mark($('place1'), !ok1, rule.place1 + (val('place1') && !ok1 ? ' (выберите из списка)' : ''));
     }
@@ -545,6 +549,9 @@
     if(rule.show.indexOf('place1')>=0 && rule.req.indexOf('place1')<0 && val('place1') && !combo1.valid()) mark($('place1'), true, rule.place1 + ' (выберите из списка)');
     if(rule.req.indexOf('shift')>=0){ var s = !!radio('shift'); $('shift').classList.toggle('invalid', !s); if(!s){ bad.push($('shift')); names.push('Смена'); } }
     ['operator','sku','lot','order','contragent','clientOrder','street','qtyAcc','qtyFact','qty'].forEach(function(k){ if(rule.req.indexOf(k)>=0) mark($(k), !val(k), FIELD_NAMES[k]); });
+    var em = val('email');
+    if(em && !/^[^@\s]+@[^@\s.]+\.[^@\s]{2,}$/.test(em)) mark($('email'), true, 'E-mail — проверьте адрес');
+    else $('email').classList.remove('invalid');
     if(rule.text) mark($('text'), !val('text'), 'Описание проблемы');
     if(!radio('deficit')){ $('deficit').classList.add('invalid'); bad.push($('deficit')); names.push('Влияет на отгрузку дефицитной позиции'); } else $('deficit').classList.remove('invalid');
     if(bad.length){
@@ -560,7 +567,7 @@
     var t = radio('type'), rule = RULES[t] || RULES["Другое"];
     var has = function(k){ return rule.show.indexOf(k)>=0; };
     return {
-      num:num, date:dstr(d), type:t, fio:val('fio'), phone:val('phone'),
+      num:num, date:dstr(d), type:t, fio:val('fio'), phone:val('phone'), email:val('email'),
       operator: has('operator') ? val('operator') : '',
       place1: has('place1') ? val('place1') : '',
       place2: has('place2') ? val('place2') : '',
@@ -585,7 +592,7 @@
       "Дата: " + p.date,
       "С чем проблема: " + p.type,
       "Контактное лицо: " + p.fio,
-      "Телефон: " + (p.phone || "—")
+      "Телефон: " + (p.phone || "—") + (p.email ? "\nE-mail: " + p.email : "")
     ];
     if(p.operator) lines.push("Оператор: " + p.operator);
     var r = RULES[p.type] || RULES["Другое"];
@@ -700,7 +707,7 @@
   function onSent(num){
     var btn=$('submitNet'); btn.disabled=false; btn.textContent='Отправить заявку';
     flash('Заявка '+num+' отправлена в штаб. Спасибо! Можно закрыть страницу или описать следующую проблему.', true);
-    ['text','sku','lot','place1','place2','operator','order','contragent','clientOrder','street','qtyAcc','qtyFact','qty'].forEach(function(id){ $(id).value=''; });
+    ['text','sku','lot','place1','place2','operator','order','contragent','clientOrder','street','qtyAcc','qtyFact','qty','email'].forEach(function(id){ $(id).value=''; });
     document.querySelectorAll('.combo .clr').forEach(function(b){ b.hidden=true; });
     ['shift','deficit'].forEach(function(n){ var s=document.querySelector('input[name='+n+']:checked'); if(s){ s.checked=false; s.closest('.seg').classList.remove('checked'); } });
     photos=[]; renderThumbs(); updatePhotoUI();
@@ -729,6 +736,7 @@
     fd.append('_template','table'); fd.append('_captcha','false');
     fd.append('Номер заявки', p.num); fd.append('Дата', p.date); fd.append('С чем проблема', p.type);
     fd.append('Контактное лицо', p.fio); fd.append('Телефон', p.phone || '—');
+    if(p.email) fd.append('E-mail', p.email);
     if(p.operator) fd.append('ФИО оператора', p.operator);
     var rr = RULES[p.type] || RULES["Другое"];
     if(p.place1) fd.append(rr.place1, p.place1);
